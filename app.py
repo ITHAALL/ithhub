@@ -1,22 +1,28 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Tes données
-livres = [
-    {'id': 1, 'titre': 'Le Petit Prince', 'auteur': 'Saint-Exupéry'},
-    {'id': 2, 'titre': '1984', 'auteur': 'George Orwell'}
-]
+kick_queue = []
 
 @app.route('/')
 def home():
-    return "Bienvenue sur mon API ! Allez sur /api/livres pour voir les données."
+    return "API de Modération Active"
 
-@app.route('/api/livres', methods=['GET'])
-def obtenir_livres():
-    return jsonify(livres)
+@app.route('/add_kick', methods=['GET'])
+def add_kick():
+    user_id = request.args.get('user_id')
+    if user_id:
+        if user_id not in kick_queue:
+            kick_queue.append(user_id)
+        return f"L'utilisateur {user_id} a été ajouté à la liste de kick."
+    return "Erreur : user_id manquant", 400
 
-# Cette partie ne sera utilisée QUE si tu lances le fichier sur ton PC.
-# Sur Render, c'est Gunicorn qui ignorera ce bloc et lancera l'app directement.
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+@app.route('/get_kicks', methods=['GET'])
+def get_kicks():
+    return jsonify({"kick_list": kick_queue})
+
+@app.route('/clear_kicks', methods=['POST'])
+def clear_kicks():
+    global kick_queue
+    kick_queue = []
+    return "Liste vidée"

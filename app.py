@@ -21,6 +21,22 @@ def add_kick():
 def get_kicks():
     return jsonify({"kick_list": kick_queue})
 
+@app.route('/admin')
+def admin_panel():
+    return '''
+        <h1>Panel de Modération</h1>
+        <input type="text" id="userId" placeholder="Entrez l'ID Roblox">
+        <button onclick="kick()">Kicker le joueur</button>
+        <script>
+            function kick() {
+                const id = document.getElementById('userId').value;
+                fetch('/add_kick?user_id=' + id)
+                    .then(response => response.text())
+                    .then(data => alert(data));
+            }
+        </script>
+    '''
+
 @app.route('/clear_kicks', methods=['POST'])
 def clear_kicks():
     global kick_queue

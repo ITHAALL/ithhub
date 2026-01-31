@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from datetime import datetime
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -21,9 +21,6 @@ chats_collection = ithchat_cluster["chats"]
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "une_cle_par_defaut_tres_longue")
-
-def generate_id(size=10, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
-    return ''.join(random.choice(chars) for _ in range(size))
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -50,23 +47,39 @@ def login():
 @app.route('/poster', methods=['POST'])
 def poster():
     if 'user' in session:
-        nouveau_post = {
-            "_id": generate_id(),
-            "user": session['user'],
-            "content": request.form.get('contenu'),
-            "date": datetime.now().strftime("%H:%M"),
-            "admin": session.get('is_admin', False)
-        }
-        chats_collection.insert_one(nouveau_post)
+        contenu = request.form.get('contenu', '').strip()
+        if contenu:
+            nouveau_post = {
+                "user": session['user'],
+                "content": contenu,
+                "date": datetime.now().strftime("%H:%M"),
+                "admin": session.get('is_admin', False)
+            }
+            chats_collection.insert_one(nouveau_post)
 
     return redirect(url_for('forum'))
+
+@app.route('/api/messages')
+def get_messages():
+    messages = list(chats_collection.find({}).sort("_id", -1))
+    
+    formatted_msgs = []
+    for m in messages:
+        formatted_msgs.append({
+            "user": m.get("user"),
+            "content": m.get("content"),
+            "date": m.get("date"),
+            "admin": m.get("admin", False)
+        })
+    return jsonify(formatted_msgs)
 
 @app.route('/forum')
 def forum():
     if 'user' not in session:
         return redirect(url_for('login'))
     
-    return render_template('forum.html', user=session['user'], messages=list(chats_collection.find({}).sort("date", -1)))
+    messages = list(chats_collection.find({}).sort("_id", -1))
+    return render_template('forum.html', user=session['user'], messages=messages)
 
 @app.route('/logout')
 def logout():

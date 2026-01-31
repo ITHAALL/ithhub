@@ -1,88 +1,85 @@
-from flask import Flask, jsonify, request, render_template_string
+from flask import Flask, render_template, request, session, redirect, url_for
 from datetime import datetime
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from dotenv import load_dotenv
+import os, string, random
 
-HTML_PAGE = '''
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Mon Mini Réseau</title>
-    <style>
-        body { font-family: sans-serif; max-width: 500px; margin: auto; background: #f0f2f5; }
-        .post { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .pseudo { font-weight: bold; color: #1877f2; }
-        input, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ddd; }
-        button { background: #1877f2; color: white; cursor: pointer; border: none; }
-    </style>
-</head>
-<body>
-    <h2>Mon Flux Social</h2>
-    <div style="background: white; padding: 15px; border-radius: 8px;">
-        <input type="text" id="pseudo" placeholder="Ton pseudo">
-        <input type="text" id="msg" placeholder="Quoi de neuf ?">
-        <button onclick="envoyer()">Publier</button>
-    </div>
-    <div id="flux"></div>
+load_dotenv()
 
-    <script>
-        function chargerMessages() {
-            fetch('/api/messages')
-                .then(res => res.json())
-                .then(data => {
-                    let html = '';
-                    data.forEach(m => {
-                        html += `<div class="post"><span class="pseudo">${m.pseudo}</span> <small>${m.date}</small><p>${m.contenu}</p></div>`;
-                    });
-                    document.getElementById('flux').innerHTML = html;
-                });
-        }
+client = MongoClient(os.getenv("MONGODB_URI"), server_api=ServerApi('1'))
 
-        function envoyer() {
-            const pseudo = document.getElementById('pseudo').value;
-            const contenu = document.getElementById('msg').value;
-            fetch('/api/poster', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({pseudo, contenu})
-            }).then(() => {
-                document.getElementById('msg').value = '';
-                chargerMessages();
-            });
-        }
-        setInterval(chargerMessages, 3000); // Rafraîchit toutes les 3s
-        chargerMessages();
-    </script>
-</body>
-</html>
-'''
+try:
+    client.admin.command('ping')
+    print("✅ La connexion avec MongoDB a été établie avec succès !")
+except Exception as e:
+    print(f"❌ Erreur obtenue en essayant de se connecter avec MongoDB : {e}")
+
+ithchat_cluster = client["ithchat"]
+accounts_collection = ithchat_cluster["accounts"]
+chats_collection = ithchat_cluster["chats"]
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "une_cle_par_defaut_tres_longue")
 
-# Notre base de données temporaire (en attendant Postgres)
-flux_messages = [
-    {"pseudo": "Admin", "contenu": "Bienvenue sur mon nouveau réseau social !", "date": "10:00"}
-]
+def generate_id(size=10, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
+    return ''.join(random.choice(chars) for _ in range(size))
 
-# Route pour afficher la page web (HTML)
-@app.route('/')
-def home():
-    return render_template_string(HTML_PAGE)
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user_input = request.form.get('user')
+        pass_input = request.form.get('pass')
+        
+        data = list(accounts_collection.find({"user": user_input}))
+        if len(data) != 0:
+            if pass_input == data[0].get("password", ""):
+                # Mot de passe correct
+                session['user'] = data[0].get('user', 'Invité')
+                session['is_admin'] = data[0].get('admin', False)
+                return redirect(url_for('forum'))
+            else:
+                # Mot de passe incorrect
+                return render_template('login.html', erreur="Le mot de passe est incorect, fais un effort frérot...")
+        else:
+            # User introuvable
+            return render_template('login.html', erreur="Ce compte n'existe pas gros malin")
+    
+    return render_template('login.html')
 
-# Route API pour récupérer les messages (JSON)
-@app.route('/api/messages', methods=['GET'])
-def get_messages():
-    return jsonify(flux_messages)
-
-# Route API pour poster un nouveau message
-@app.route('/api/poster', methods=['POST'])
+@app.route('/poster', methods=['POST'])
 def poster():
-    data = request.json
-    nouveau_post = {
-        "pseudo": data.get('pseudo', 'Anonyme'),
-        "contenu": data.get('contenu', ''),
-        "date": datetime.now().strftime("%H:%M")
-    }
-    flux_messages.insert(0, nouveau_post) # On met le plus récent en haut
-    return jsonify({"status": "success"})
+    if 'user' in session:
+        nouveau_post = {
+            "_id": generate_id(),
+            "user": session['user'],
+            "content": request.form.get('contenu'),
+            "date": datetime.now().strftime("%H:%M"),
+            "admin": session.get('is_admin', False)
+        }
+        chats_collection.insert_one(nouveau_post)
+
+    return redirect(url_for('forum'))
+
+@app.route('/forum')
+def forum():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    
+    return render_template('forum.html', user=session['user'], messages=list(chats_collection.find({}).sort("date", -1)))
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login'))
+
+@app.route('/reset_chat')
+def reset_chat():
+    if session.get('is_admin') == True:
+        chats_collection.delete_many({})
+        print("💥 Le chat a été réinitialisé par un admin.")
+    
+    return redirect(url_for('forum'))
 
 if __name__ == '__main__':
     app.run(debug=True)

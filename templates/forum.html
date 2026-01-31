@@ -84,5 +84,44 @@
             {% endfor %}
         </div>
     </div>
+    <script>
+        function loadMessages() {
+            fetch('/api/messages')
+                .then(response => response.json())
+                .then(data => {
+                    const feed = document.getElementById('feed');
+                    feed.innerHTML = ''; // On vide le feed actuel
+                
+                    data.forEach(msg => {
+                        const card = document.createElement('div');
+                        card.className = 'msg-card';
+                        
+                        // Gestion du style Admin
+                        if (msg.admin) {
+                            card.style.borderLeft = '4px solid #ff5252';
+                            card.style.background = '#251a1a';
+                        }
+                    
+                        let adminBadge = msg.admin ? 
+                            `<b style="color: #ff5252; font-size: 0.7rem; border: 1px solid #ff5252; padding: 2px 5px; border-radius: 4px; margin-left: 5px;">ADMIN</b>` : '';
+                    
+                        let authorStyle = msg.admin ? 'style="color: #ff5252;"' : '';
+                    
+                        card.innerHTML = `
+                            <span class="date">${msg.date}</span>
+                            <span class="author" ${authorStyle}>@${msg.user}</span>
+                            ${adminBadge}
+                            <p>${msg.content}</p>
+                        `;
+                        
+                        feed.appendChild(card);
+                    });
+                })
+                .catch(err => console.error("Erreur lors de la récup des messages:", err));
+        }
+        
+        // Rafraîchir toutes les 3 secondes
+        setInterval(loadMessages, 3000);
+</script>
 </body>
 </html>

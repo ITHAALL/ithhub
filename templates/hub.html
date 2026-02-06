@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>ITH-Hub</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .hub-container { display: flex; justify-content: center; gap: 30px; margin-top: 50px; }
+        .choice-card {
+            background: #1e1e1e; padding: 40px; border-radius: 15px; width: 200px;
+            text-decoration: none; color: white; border: 2px solid #333; transition: 0.3s;
+        }
+        .choice-card:hover { border-color: #007bff; transform: translateY(-5px); }
+        .choice-card h2 { color: #007bff; }
+        .logout { color: #ff5252; text-decoration: none; display: block; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <h1>Bienvenue sur ITH-Hub, {{ user }}</h1>
+    <p>Choisissez votre destination :</p>
+    
+    <div class="hub-container">
+        <a href="{{ url_for('flix_index') }}" class="choice-card">
+            <h2>ITHFlix</h2>
+            <p>Films & Streaming</p>
+        </a>
+        <a href="{{ url_for('forum') }}" class="choice-card">
+            <h2>ITHChat</h2>
+            <p>Communauté & Forum</p>
+        </a>
+    </div>
+
+    <a href="{{ url_for('logout') }}" class="logout">Se déconnecter</a>
+</body>
+</html>

@@ -12,7 +12,22 @@
         }
         .choice-card:hover { border-color: #007bff; transform: translateY(-5px); }
         .choice-card h2 { color: #007bff; }
-        .logout { color: #ff5252; text-decoration: none; display: block; margin-top: 40px; }
+        .logout-btn {
+            display: inline-block;
+            margin-top: 50px;
+            padding: 12px 25px;
+            color: #ff5252;
+            text-decoration: none;
+            border: 2px solid #ff5252;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .logout-btn:hover {
+            background: #ff5252;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 82, 82, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -30,6 +45,6 @@
         </a>
     </div>
 
-    <a href="{{ url_for('logout') }}" class="logout">Se déconnecter</a>
+    <a href="{{ url_for('logout') }}" class="logout-btn">Se déconnecter du Hub</a>
 </body>
 </html>

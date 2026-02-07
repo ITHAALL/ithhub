@@ -3,52 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ movie.title }} - ITHStream</title>
+    <title>{{ movie.title }} - ITHFlix</title>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        header { margin-bottom: 20px; }
-        a { color: #007bff; text-decoration: none; font-weight: bold; }
-        
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* Ratio 16:9 */
-            height: 0;
-            overflow: hidden;
-            background: #000;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
-        }
-        .video-container iframe {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            border: none;
-        }
-        h2 { margin-top: 20px; color: #007bff; }
+        body { background: #000; color: white; font-family: sans-serif; margin: 0; text-align: center; }
+        .nav { padding: 15px; background: #111; display: flex; justify-content: space-between; align-items: center; }
+        .video-container { width: 100%; max-width: 1000px; margin: 30px auto; aspect-ratio: 16/9; background: #111; border-radius: 12px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        iframe { width: 100%; height: 100%; border: none; }
+        h1 { margin-top: 20px; color: #ffd700; }
+        .back-link { color: #888; text-decoration: none; font-weight: bold; }
+        .back-link:hover { color: white; }
     </style>
 </head>
 <body>
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #1a1a1a; border-bottom: 1px solid #333;">
-        <div style="font-size: 0.9rem;">
-            👤 Connecté : <b style="color: #007bff;">{{ session['user'] }}</b> 
-            | <a href="{{ url_for('logout') }}" style="color: #ff5252; text-decoration: none; font-size: 0.8rem; margin-left: 5px;">Quitter</a>
-        </div>
-        <a href="{{ url_for('hub') }}" style="background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
-            🏠 Retour au Hub
-        </a>
+    <div class="nav">
+        <a href="{{ url_for('flix_index') }}" class="back-link">← Retour au catalogue</a>
+        <span>Visionnage de : <b>{{ movie.title }}</b></span>
     </div>
-    
-    <div class="container">
-        <header>
-            <a href="{{ url_for('flix_index') }}">← Retour à l'accueil</a>
-        </header>
 
-        <div class="video-container">
-            <IFRAME SRC="https://uqload.bz/embed-{{ movie.uqload_id }}.html" FRAMEBORDER=0 MARGINWIDTH=0 MARGINHEIGHT=0 SCROLLING=NO WIDTH=640 HEIGHT=360 allowfullscreen></IFRAME>
-        </div>
+    <h1>{{ movie.title }}</h1>
 
-        <h2>{{ movie.title }}</h2>
-        <p>pas de pub donc commence à vite envoyer de l'argent à ithall</p>
+    <div class="video-container">
+        <iframe src="https://uqload.bz/embed-{{ movie.uqload_id }}.html" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>
     </div>
 </body>
 </html>

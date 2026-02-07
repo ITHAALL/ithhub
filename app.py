@@ -2,9 +2,8 @@ from flask import Flask, render_template, request, session, redirect, url_for, j
 from datetime import datetime
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from bson.objectid import ObjectId
 from dotenv import load_dotenv
-import os
+import os, requests, time, threading
 
 load_dotenv()
 
@@ -72,10 +71,19 @@ def flix_index():
 @login_required
 def watch(movie_id):
     try:
+        # On s'assure que l'ID est converti correctement
+        from bson.objectid import ObjectId
         movie = movies.find_one({"_id": ObjectId(movie_id)})
-        if not movie: abort(404)
+        
+        if movie is None:
+            print(f"❓ Film introuvable pour l'ID: {movie_id}")
+            abort(404)
+            
         return render_template('watch.html', movie=movie)
-    except: abort(400)
+    except Exception as e:
+        # Affiche l'erreur précise dans ton terminal pour le debug
+        print(f"❌ Erreur lors du chargement du film: {e}")
+        abort(400)
 
 # --- Routes ITHChat ---
 @app.route('/chat')
@@ -103,5 +111,16 @@ def get_messages():
     formatted = [{"user": m["user"], "content": m["content"], "date": m["date"], "admin": m.get("admin", False)} for m in msgs]
     return jsonify(formatted)
 
+def ping_self():
+    while True:
+        try:
+            requests.get("https://api-ubf1.onrender.com/ping")
+            print("Keep-alive : Ping envoyé avec succès.")
+        except Exception as e:
+            print(f"Keep-alive : Erreur de ping {e}")
+        
+        time.sleep(840) 
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    threading.Thread(target=ping_self, daemon=True).start()
+    app.run(debug=False)

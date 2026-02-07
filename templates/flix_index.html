@@ -31,6 +31,16 @@
     </style>
 </head>
 <body>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #1a1a1a; border-bottom: 1px solid #333;">
+        <div style="font-size: 0.9rem;">
+            👤 Connecté : <b style="color: #007bff;">{{ session['user'] }}</b> 
+            | <a href="{{ url_for('logout') }}" style="color: #ff5252; text-decoration: none; font-size: 0.8rem; margin-left: 5px;">Quitter</a>
+        </div>
+        <a href="{{ url_for('hub') }}" style="background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
+            🏠 Retour au Hub
+        </a>
+    </div>
+
     <div class="container">
         <header><h1>ITHFlix</h1></header>
         <div class="movie-grid">

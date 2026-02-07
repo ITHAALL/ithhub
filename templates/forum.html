@@ -56,7 +56,10 @@
     <div class="container">
         <header>
             <h3>ITHChat</h3>
-            <span>Bonjour, <b>{{ user }}</b> ! <a href="{{ url_for('logout') }}">Quitter</a></span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <a href="{{ url_for('hub') }}" style="color: #007bff; text-decoration: none; font-weight: bold;">🏠 Accueil Hub</a>
+                <span>Bonjour, <b>{{ user }}</b> ! <a href="{{ url_for('logout') }}">Quitter</a></span>
+            </div>
         </header>
 
         <div class="post-box">

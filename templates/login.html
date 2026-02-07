@@ -3,62 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITHChat - Connexion</title>
+    <title>Connexion - ITHHub</title>
     <style>
-        body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-card {
-            background: #1e1e1e;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-        h2 { color: #007bff; margin-bottom: 1.5rem; }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 6px;
-            border: 1px solid #333;
-            background: #2c2c2c;
-            color: white;
-            box-sizing: border-box; /* Important pour le scale */
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #007bff;
-            border: none;
-            color: white;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #1a1a1a; padding: 40px; border-radius: 20px; border: 1px solid #333; width: 100%; max-width: 350px; text-align: center; }
+        h2 { color: #007bff; margin-bottom: 30px; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #007bff; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #0056b3; }
-        .error { color: #ff5252; font-size: 0.9rem; margin-top: 10px; }
+        .erreur { color: #ff5252; font-size: 0.9rem; margin-bottom: 15px; }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h2>ITHChat</h2>
-        <form method="POST" action="{{ url_for('login') }}">
-            <input type="text" name="user" placeholder="Utilisateur" required>
+    <div class="login-box">
+        <h2>ITH-HUB</h2>
+        {% if erreur %}<p class="erreur">{{ erreur }}</p>{% endif %}
+        <form method="POST">
+            <input type="text" name="user" placeholder="Nom d'utilisateur" required>
             <input type="password" name="pass" placeholder="Mot de passe" required>
             <button type="submit">Se connecter</button>
         </form>
-        {% if erreur %}<p class="error">{{ erreur }}</p>{% endif %}
     </div>
 </body>
 </html>

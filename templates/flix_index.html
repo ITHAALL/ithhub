@@ -3,54 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITHStream - Accueil</title>
+    <title>ITHFlix - Catalogue</title>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
-        header { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 30px; text-align: center; }
-        h1 { color: #007bff; }
-        
+        :root {
+            --primary: #ffd700;
+            --bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header & Navigation */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
+        }
+
+        .user-info { font-size: 0.9rem; }
+        .user-info b { color: var(--primary); }
+
+        .btn-hub {
+            background: #333;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn-hub:hover { background: #444; }
+
+        /* Search Section */
+        .search-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .search-bar {
+            width: 100%;
+            max-width: 600px;
+            padding: 12px 25px;
+            border-radius: 30px;
+            border: 2px solid #333;
+            background: #222;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .search-bar:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Grid Layout */
         .movie-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            padding: 20px 40px;
         }
+
         .movie-card {
-            background: #1e1e1e;
-            border-radius: 8px;
+            background: var(--card-bg);
+            border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.3s;
-            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-decoration: none;
             color: inherit;
-            border-bottom: 3px solid #007bff;
         }
-        .movie-card:hover { transform: scale(1.05); }
-        .movie-card img { width: 100%; height: 250px; object-fit: cover; }
-        .movie-card h3 { padding: 10px; font-size: 1rem; text-align: center; margin: 0; }
+
+        .movie-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .movie-card img {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+        }
+
+        .movie-title {
+            padding: 12px;
+            margin: 0;
+            font-size: 1rem;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Badge Dernier Ajout */
+        .badge-new {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--primary);
+            color: black;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
+            z-index: 5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            text-transform: uppercase;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); padding: 10px; }
+            .navbar { padding: 10px 15px; }
+        }
     </style>
 </head>
 <body>
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #1a1a1a; border-bottom: 1px solid #333;">
-        <div style="font-size: 0.9rem;">
-            👤 Connecté : <b style="color: #007bff;">{{ session['user'] }}</b> 
-            | <a href="{{ url_for('logout') }}" style="color: #ff5252; text-decoration: none; font-size: 0.8rem; margin-left: 5px;">Quitter</a>
+
+    <nav class="navbar">
+        <div class="user-info">
+            👤 <b>{{ session['user'] }}</b> 
+            <a href="{{ url_for('logout') }}" style="color: #ff5252; margin-left: 10px; text-decoration: none;">Quitter</a>
         </div>
-        <a href="{{ url_for('hub') }}" style="background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">
-            🏠 Retour au Hub
-        </a>
+        <a href="{{ url_for('hub') }}" class="btn-hub">🏠 Accueil Hub</a>
+    </nav>
+
+    <div class="search-container">
+        <input type="text" id="movieSearch" class="search-bar" onkeyup="filterMovies()" placeholder="Rechercher un film, une série...">
     </div>
 
-    <div class="container">
-        <header><h1>ITHFlix</h1></header>
-        <div class="movie-grid">
-            {% for m in movies %}
-            <a href="{{ url_for('watch', movie_id=m['_id']|string) }}" class="movie-card">
-                <img src="{{ m.cover }}" alt="{{ m.title }}">
-                <h3>{{ m.title }}</h3>
-            </a>
-            {% endfor %}
-        </div>
+    <div class="movie-grid" id="movieGrid">
+        {% for m in movies %}
+        <a href="{{ url_for('watch', movie_id=m['_id']|string) }}" class="movie-card">
+            
+            {% if loop.first %}
+            <div class="badge-new">🟡 Dernier ajout</div>
+            {% endif %}
+
+            <img src="{{ m.cover }}" alt="{{ m.title }}">
+            <h3 class="movie-title">{{ m.title }}</h3>
+        </a>
+        {% endfor %}
     </div>
+
+    <script>
+        function filterMovies() {
+            const input = document.getElementById('movieSearch').value.toLowerCase();
+            const grid = document.getElementById('movieGrid');
+            const cards = grid.getElementsByClassName('movie-card');
+
+            for (let i = 0; i < cards.length; i++) {
+                const title = cards[i].getElementsByClassName('movie-title')[0].innerText.toLowerCase();
+                if (title.includes(input)) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+
 </body>
 </html>

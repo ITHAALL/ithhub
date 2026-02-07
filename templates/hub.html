@@ -2,49 +2,51 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>ITH-Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITH-Hub - Accueil</title>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .hub-container { display: flex; justify-content: center; gap: 30px; margin-top: 50px; }
-        .choice-card {
-            background: #1e1e1e; padding: 40px; border-radius: 15px; width: 200px;
-            text-decoration: none; color: white; border: 2px solid #333; transition: 0.3s;
+        :root { --primary: #007bff; --accent: #ffd700; --bg: #0f0f0f; --card: #1a1a1a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        .header { padding: 50px 20px; text-align: center; }
+        .header h1 { font-size: 3rem; margin: 0; background: linear-gradient(45deg, #007bff, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; max-width: 1000px; padding: 20px; }
+        
+        .hub-card {
+            background: var(--card); border: 1px solid #333; border-radius: 20px; width: 280px; padding: 30px;
+            text-align: center; text-decoration: none; color: white; transition: 0.3s;
         }
-        .choice-card:hover { border-color: #007bff; transform: translateY(-5px); }
-        .choice-card h2 { color: #007bff; }
+        .hub-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0, 123, 255, 0.2); }
+        .hub-card i { font-size: 3rem; display: block; margin-bottom: 15px; }
+        .hub-card h2 { margin: 10px 0; color: var(--primary); }
+
         .logout-btn {
-            display: inline-block;
-            margin-top: 50px;
-            padding: 12px 25px;
-            color: #ff5252;
-            text-decoration: none;
-            border: 2px solid #ff5252;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: 0.3s;
+            margin-top: 50px; padding: 12px 30px; border: 2px solid #ff5252; color: #ff5252;
+            text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;
         }
-        .logout-btn:hover {
-            background: #ff5252;
-            color: white;
-            box-shadow: 0 0 15px rgba(255, 82, 82, 0.4);
-        }
+        .logout-btn:hover { background: #ff5252; color: white; }
     </style>
 </head>
 <body>
-    <h1>Bienvenue sur ITH-Hub, {{ user }}</h1>
-    <p>Choisissez votre destination :</p>
-    
-    <div class="hub-container">
-        <a href="{{ url_for('flix_index') }}" class="choice-card">
+    <div class="header">
+        <h1>ITH-HUB</h1>
+        <p>Bienvenue, <b>{{ user }} !</b></p>
+    </div>
+
+    <div class="container">
+        <a href="{{ url_for('flix_index') }}" class="hub-card">
+            <i>🎬</i>
             <h2>ITHFlix</h2>
-            <p>Films & Streaming</p>
+            <p>Streaming films & séries sans limites.</p>
         </a>
-        <a href="{{ url_for('forum') }}" class="choice-card">
+        <a href="{{ url_for('forum') }}" class="hub-card">
+            <i>💬</i>
             <h2>ITHChat</h2>
-            <p>Communauté & Forum</p>
+            <p>Discutez en temps réel avec la communauté.</p>
         </a>
     </div>
 
-    <a href="{{ url_for('logout') }}" class="logout-btn">Se déconnecter du Hub</a>
+    <a href="{{ url_for('logout') }}" class="logout-btn">Se déconnecter</a>
 </body>
 </html>

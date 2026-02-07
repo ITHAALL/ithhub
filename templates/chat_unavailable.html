@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITHChat - Indisponible</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --bg: #0f0f0f;
+            --card: #1a1a1a;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background: var(--card);
+            padding: 50px 30px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        p {
+            color: #aaa;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn-back {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-back:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <span class="icon">🚫</span>
+        <h1>ITHChat Indisponible</h1>
+        <p>Désolé, l'accès au chat est temporairement suspendu ou en cours de maintenance. <br>Revenez plus tard !</p>
+        
+        <a href="{{ url_for('hub') }}" class="btn-back">🏠 Retour au Hub</a>
+    </div>
+
+</body>
+</html>

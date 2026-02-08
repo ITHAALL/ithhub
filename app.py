@@ -209,20 +209,21 @@ def flix_index():
     all_movies = list(movies.find({}).sort("_id", -1))
     return render_template('flix_index.html', movies=all_movies)
 
-@app.route('/flix/watch/<movie_id>')
-@login_required
+@app.route('/watch/<movie_id>')
 def watch(movie_id):
-    try:
-        movie = movies.find_one({"_id": ObjectId(movie_id)})
-        
-        if movie is None:
-            print(f"❓ Film introuvable pour l'ID: {movie_id}")
-            abort(404)
-            
-        return render_template('watch.html', movie=movie)
-    except Exception as e:
-        print(f"❌ Erreur lors du chargement du film: {e}")
-        abort(400)
+    movie = movies.find_one({"_id": ObjectId(movie_id)})
+    
+    if not movie:
+        return "Film non trouvé", 404
+
+    video_url = ""
+    
+    if movie.get('uqload_id'):
+        video_url = f"https://uqload.bz/embed-{movie['uqload_id']}.html"
+    elif movie.get('other_url'):
+        video_url = movie['other_url']
+    
+    return render_template('watch.html', movie=movie, video_url=video_url)
 
 # --- Routes ITHChat ---
 @app.route('/chat')

@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify, abort
+from flask import Flask, render_template, request, session, redirect, url_for, abort, send_file
 from datetime import datetime
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 from bson.objectid import ObjectId
-import os, requests, time, threading
+import os, requests, time, math, io
 
 load_dotenv()
 
@@ -22,6 +22,119 @@ chats = db_chat["chats"]
 movies = db_flix["movies"]
 
 # --- Fonctions
+def get_dms(token):
+    headers = {"Authorization": token, "Content-Type": "application/json"}
+    response = requests.get(f"https://discord.com/api/v9/users/@me/channels", headers=headers)
+    dms_list = []
+    
+    if response.status_code == 200:
+        for info in response.json():
+            if info.get('recipients'):
+                user = info['recipients'][0]
+                uid = user.get('id')
+                av = user.get('avatar')
+                avatar_url = f"https://cdn.discordapp.com/avatars/{uid}/{av}.png?size=64" if av else "https://cdn.discordapp.com/embed/avatars/0.png"
+                
+                dms_list.append({
+                    "channel_id": info.get('id'),
+                    "user_id": uid,
+                    "username": user.get('username'),
+                    "avatar": avatar_url
+                })
+    return dms_list
+
+def check_token(token : str) -> bool:
+    try:
+        headers = {"Authorization": token, "Content-Type": "application/json"}
+        token_check = requests.get("https://discordapp.com/api/v9/users/@me", headers=headers)
+        if token_check.status_code != 200:
+            raise Exception()
+    except Exception as e:
+        return False
+    else:
+        return True
+    
+def check_channel(token, channel_id):
+    try:
+        headers = {"Authorization": token, "Content-Type": "application/json"}
+        params = {"limit": 1}
+        response = requests.get(f"https://discord.com/api/v9/channels/{channel_id}/messages", headers=headers, params=params)
+        if response.status_code != 200:
+            raise Exception
+    except Exception:
+        return False
+    else:
+        return True
+
+def save_dm(token, channel_id, message_count = 50):
+    # === VERIFICATION DU TOKEN ===
+    if check_token(token) != True:
+        print("Token invalide")
+        return
+    
+    # === VERIFICATION DU CHANNEL ===
+    if check_channel(token, channel_id) != True:
+        print("Token invalide")
+        return
+    
+    headers = {"Authorization": token, "Content-Type": "application/json"}
+    print("📥 Récupération des messages...")
+    requests_count = math.ceil(message_count / 50)
+    last_message_id = None
+    messages = []
+    users = {}
+
+    for _ in range(requests_count):
+        params = {"limit": 50}
+        if last_message_id:
+            params["before"] = last_message_id
+
+        response = requests.get(f"https://discord.com/api/v9/channels/{channel_id}/messages", headers=headers, params=params)
+        while response.status_code == 429:
+            time.sleep(response.json().get("retry_after", 5))
+            response = requests.get(f"https://discord.com/api/v9/channels/{channel_id}/messages", headers=headers, params=params)
+
+        if response.status_code != 200:
+            break
+
+        batch = response.json()
+        if not batch:
+            break
+
+        for msg in batch:
+            users[msg["author"]["id"]] = msg["author"]
+
+        last_message_id = batch[-1]["id"]
+        messages.extend(batch)
+        if len(messages) >= message_count:
+            break
+
+    print(f"✅ {len(messages)} messages récupérés.")
+
+    # === CONSTRUCTION DU TXT  ===
+    lines = []
+    
+    for msg in reversed(messages):
+        date_obj = datetime.fromisoformat(msg["timestamp"].replace("Z", "+00:00"))
+        date_str = f"{date_obj.day}/{date_obj.month} à {date_obj.strftime('%H:%M')}"        
+
+        username = msg["author"]["username"]
+        content = msg.get("content") or "[Fichier ou Message Vide]"
+        
+        content = content.replace("\n", " ")
+
+        line = f"[{username}] ({date_str}) : {content}"
+        lines.append(line)
+
+        for att in msg.get("attachments", []):
+            lines.append(f"     -> Pièce jointe : {att['url']}")
+
+    # === GÉNÉRATION DU FICHIER .TXT ===
+    filename = f"backup_{channel_id}.txt"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    
+    print(f"✅ Backup texte terminée : {filename}")
 
 # Authentification
 def login_required(f):
@@ -132,20 +245,57 @@ def poster():
         })
     return redirect(url_for('forum'))
 
-@app.route('/ping')
-def ping():
-    return "Pong !"
+# --- Route Save ---
+@app.route('/save')
+@login_required
+def save_home():
+    return render_template('save_index.html')
 
-def ping_self():
-    while True:
-        try:
-            requests.get("https://api-ubf1.onrender.com/ping")
-            print("Keep-alive : Ping envoyé avec succès.")
-        except Exception as e:
-            print(f"Keep-alive : Erreur de ping {e}")
+@app.route('/save/list', methods=['POST'])
+@login_required
+def save_list():
+    token = request.form.get('token')
+    print(f'test {token}')
+    if check_token(token):
+        session['ds_token'] = token
+        dms = get_dms(token)
+        return render_template('save_index.html', dms=dms)
+    return render_template('save_index.html', error="Token Discord invalide.")
+    
+@app.route('/save/run/<channel_id>', methods=['POST'])
+@login_required
+def save_run(channel_id):
+    token = session.get('ds_token')
+    if not token: 
+        return "Session expirée", 403
+    
+    filename = f"backup_{channel_id}.txt"
+    
+    try:
+        save_dm(token, channel_id, message_count=1000)
         
-        time.sleep(60) 
+        if not os.path.exists(filename):
+            return "Erreur : Fichier non généré", 500
+
+        return_data = io.BytesIO()
+        with open(filename, 'rb') as f:
+            return_data.write(f.read())
+        return_data.seek(0)
+
+        os.remove(filename)
+        print(f"🗑️ Fichier {filename} supprimé avec succès.")
+
+        return send_file(
+            return_data,
+            mimetype='text/plain',
+            as_attachment=True,
+            download_name=filename
+        )
+
+    except Exception as e:
+        if os.path.exists(filename):
+            os.remove(filename)
+        return f"Erreur : {str(e)}", 500
 
 if __name__ == '__main__':
-    threading.Thread(target=ping_self, daemon=True).start()
     app.run(debug=False)

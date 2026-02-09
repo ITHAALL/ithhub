@@ -4,7 +4,8 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 from bson.objectid import ObjectId
-import os, requests, time, math, io
+import os, requests, time, math, io, re
+from collections import Counter
 
 load_dotenv()
 
@@ -136,6 +137,79 @@ def save_dm(token, channel_id, message_count = 50):
     
     print(f"✅ Backup texte terminée : {filename}")
 
+
+def get_stats(token, cid):
+    headers = {'Authorization': token}
+    all_messages = []
+    last_id = None
+    
+    for _ in range(10):
+        url = f'https://discord.com/api/v9/channels/{cid}/messages?limit=100'
+        if last_id: url += f'&before={last_id}'
+        res = requests.get(url, headers=headers)
+        if res.status_code != 200: break
+        batch = res.json()
+        if not batch: break
+        all_messages.extend(batch)
+        last_id = batch[-1]['id']
+
+    if not all_messages: return {"error": "Vide"}
+
+    users = {}
+    stop_words = {'le', 'la', 'les', 'un', 'une', 'des', 'et', 'est', 'que', 'qui', 'dans', 'pour', 'pas', 'ce', 'sur', 'ca', 'on', 'je', 'tu', 'de'}
+
+    sorted_msgs = sorted(all_messages, key=lambda x: x['timestamp'])
+    last_msg = None
+
+    for msg in sorted_msgs:
+        uid = msg['author']['id']
+        content = msg.get('content', '')
+        
+        if uid not in users:
+            users[uid] = {
+                "name": msg['author']['username'],
+                "msg_count": 0, "attachments": 0, "chars": 0,
+                "words_list": [], "emojis_list": [], "hours": [],
+                "response_times": [], "insults_count": 0, "questions": 0
+            }
+        
+        u = users[uid]
+        u["msg_count"] += 1
+        u["attachments"] += len(msg.get('attachments', []))
+        u["chars"] += len(content)
+        
+        ts = datetime.fromisoformat(msg['timestamp'].replace("+00:00", ""))
+        u["hours"].append(ts.hour)
+
+        if content:
+            if "?" in content: u["questions"] += 1
+            
+            emojis = re.findall(r'<a?:\w+:\d+>|[\u263a-\U0001f645]', content)
+            u["emojis_list"].extend(emojis)
+
+            words = re.findall(r'\w{3,}', content.lower())
+            u["words_list"].extend([w for w in words if w not in stop_words])
+
+    final_stats = []
+    for uid, d in users.items():
+        top_words = [f"{w} ({c})" for w, c in Counter(d["words_list"]).most_common(3)]
+        top_emoji = Counter(d["emojis_list"]).most_common(1)
+        
+        most_active_hour = Counter(d["hours"]).most_common(1)[0][0] if d["hours"] else 0
+        
+        final_stats.append({
+            "name": d["name"],
+            "msg_count": d["msg_count"],
+            "top_words": top_words,
+            "best_emoji": top_emoji[0][0] if top_emoji else "Aucun",
+            "activity": f"{most_active_hour}h",
+            "questions": d["questions"],
+            "avg_len": round(d["chars"] / d["msg_count"], 1),
+            "vibe": "Grand Bavard" if d["chars"] / d["msg_count"] > 50 else "Rapide & Efficace"
+        })
+
+    return {"users": final_stats}
+
 # Authentification
 def login_required(f):
     def wrapper(*args, **kwargs):
@@ -216,12 +290,7 @@ def watch(movie_id):
     if not movie:
         return "Film non trouvé", 404
 
-    video_url = ""
-    
-    if movie.get('uqload_id'):
-        video_url = f"https://uqload.bz/embed-{movie['uqload_id']}.html"
-    elif movie.get('other_url'):
-        video_url = movie['other_url']
+    video_url = movie.get('source')
     
     return render_template('watch.html', movie=movie, video_url=video_url)
 
@@ -246,7 +315,7 @@ def poster():
         })
     return redirect(url_for('forum'))
 
-# --- Route Save ---
+# --- Routes ITHSave ---
 @app.route('/save')
 @login_required
 def save_home():
@@ -297,6 +366,34 @@ def save_run(channel_id):
         if os.path.exists(filename):
             os.remove(filename)
         return f"Erreur : {str(e)}", 500
+    
+# --- Routes ITHStats ---
+@app.route('/stats')
+@login_required
+def stats_home():
+    # On réutilise le token de ITHSave s'il existe
+    token = session.get('ds_token')
+    if not token:
+        # Si pas de token, on redirige vers la page où on entre le token
+        return redirect(url_for('save_home')) 
+
+    dms = get_dms(token)
+    return render_template('stats_selection.html', dms=dms)
+
+@app.route('/stats/view/<cid>')
+@login_required
+def stats_page(cid):
+    token = session.get('ds_token')
+    if not token: 
+        return redirect(url_for('save_home'))
+    
+    # Appel de la fonction de calcul
+    data = get_stats(token, cid) 
+    
+    if "error" in data:
+        return render_template('save_index.html', error="Impossible d'analyser ce salon.")
+        
+    return render_template('stats.html', stats=data)
 
 if __name__ == '__main__':
     app.run(debug=False)

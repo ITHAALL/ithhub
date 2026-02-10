@@ -3,32 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ movie.title }} - ITHFlix</title>
+    <title>{{ movie.title }} - ITHHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #000; color: white; font-family: sans-serif; margin: 0; text-align: center; }
-        .nav { padding: 15px; background: #111; display: flex; justify-content: space-between; align-items: center; }
-        .video-container { width: 100%; max-width: 1000px; margin: 30px auto; aspect-ratio: 16/9; background: #111; border-radius: 12px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
-        iframe { width: 100%; height: 100%; border: none; }
-        h1 { margin-top: 20px; color: #ffd700; }
-        .back-link { color: #888; text-decoration: none; font-weight: bold; }
-        .back-link:hover { color: white; }
+        :root {
+            --primary: #e50914;
+            --bg: #050505;
+            --nav-bg: rgba(0, 0, 0, 0.8);
+        }
+
+        body { 
+            background: var(--bg); 
+            color: white; 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            overflow-x: hidden;
+        }
+
+        /* Header discret style Cinéma */
+        .nav { 
+            padding: 20px 40px; 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+
+        .back-link { 
+            color: #ccc; 
+            text-decoration: none; 
+            font-weight: bold; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-link:hover { color: var(--primary); transform: translateX(-5px); }
+
+        .movie-info-top {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .movie-info-top b { color: white; }
+
+        /* Conteneur Vidéo Principal */
+        .main-content {
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .video-wrapper { 
+            width: 95%; 
+            max-width: 1200px; 
+            margin: 20px auto; 
+            position: relative;
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 0 40px rgba(229, 9, 20, 0.15); /* Légère lueur rouge */
+            background: #000;
+        }
+
+        .video-container { 
+            position: relative; 
+            padding-bottom: 56.25%; /* Ratio 16:9 */
+            height: 0; 
+        }
+
+        iframe { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+
+        /* Détails du film sous le lecteur */
+        .details-section {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            text-align: left;
+        }
+
+        h1 { 
+            margin: 0; 
+            font-size: 2.2rem; 
+            letter-spacing: -1px;
+        }
+
+        .meta-tags {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            color: #46d369; /* Vert "Match" à la Netflix */
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .tag-hd {
+            border: 1px solid #555;
+            padding: 1px 6px;
+            border-radius: 3px;
+            color: white;
+            font-size: 0.7rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav { padding: 15px 20px; }
+            h1 { font-size: 1.5rem; }
+            .movie-info-top { display: none; }
+        }
     </style>
 </head>
 <body>
+
     <div class="nav">
-        <a href="{{ url_for('flix_index') }}" class="back-link">← Retour au catalogue</a>
-        <span>Visionnage de : <b>{{ movie.title }}</b></span>
+        <a href="{{ url_for('flix_index') }}" class="back-link">
+            <i class="fa-solid fa-chevron-left"></i> Retour au catalogue
+        </a>
+        <div class="movie-info-top">
+            Visionnage de : <b>{{ movie.title }}</b>
+        </div>
     </div>
 
-    <h1>{{ movie.title }}</h1>
+    <div class="main-content">
+        <div class="video-wrapper">
+            <div class="video-container">
+                <iframe 
+                    src="{{ video_url }}" 
+                    allowfullscreen="true" 
+                    scrolling="no"
+                    allow="autoplay; encrypted-media">
+                </iframe>
+            </div>
+        </div>
 
-    <div class="video-container" style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden;">
-        <iframe 
-            src="{{ video_url }}" 
-            style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" 
-            allowfullscreen="true" 
-            scrolling="no">
-        </iframe>
+        <div class="details-section">
+            <!-- <div class="meta-tags">
+                <span style="color: #888;">2024</span>
+                <span class="tag-hd">HD</span>
+                <span class="tag-hd">5.1</span>
+            </div> -->
+            <h1>{{ movie.title }}</h1>
+            <p style="color: #aaa; max-width: 600px; line-height: 1.5;">
+                Vous regardez actuellement <b>{{ movie.title }}</b> sans publicité ni pop-up sur ITHHub.
+            </p>
+        </div>
     </div>
+
 </body>
 </html>

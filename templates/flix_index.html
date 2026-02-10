@@ -3,181 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITHFlix - Catalogue</title>
+    <title>ITHHub | Streaming</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #ffd700;
-            --bg: #0f0f0f;
-            --card-bg: #1a1a1a;
+            --primary: #e50914; /* Rouge Netflix */
+            --accent: #ffd700;
+            --bg: #080808;
+            --card-bg: #141414;
             --text: #ffffff;
+            --nav-bg: rgba(0, 0, 0, 0.9);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 0;
+            padding-bottom: 50px;
         }
 
-        /* Header & Navigation */
+        /* Barre de navigation sophistiquée */
         .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 30px;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            position: sticky;
+            padding: 15px 50px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+            position: fixed;
+            width: 100%;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid #333;
+            box-sizing: border-box;
+            transition: background 0.3s;
         }
 
-        .user-info { font-size: 0.9rem; }
-        .user-info b { color: var(--primary); }
-
-        .btn-hub {
-            background: #333;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
+        .logo {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 2px;
             text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-name { font-weight: 500; font-size: 0.9rem; }
+        .user-name i { color: var(--primary); margin-right: 5px; }
+
+        .btn-logout {
+            background: var(--primary);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: bold;
             transition: 0.3s;
         }
 
-        .btn-hub:hover { background: #444; }
-
-        /* Search Section */
-        .search-container {
+        /* Hero / Search Section */
+        .hero {
+            padding: 150px 20px 60px;
+            background: linear-gradient(rgba(8,8,8,0.2), var(--bg)), url('https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070');
+            background-size: cover;
+            background-position: center;
             text-align: center;
-            padding: 40px 20px;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
         }
 
         .search-bar {
             width: 100%;
-            max-width: 600px;
-            padding: 12px 25px;
-            border-radius: 30px;
-            border: 2px solid #333;
-            background: #222;
+            padding: 15px 50px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
             color: white;
-            font-size: 1rem;
+            font-size: 1.1rem;
             outline: none;
-            transition: 0.3s;
+            transition: 0.4s;
         }
 
-        .search-bar:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-        }
+        .search-bar:focus { border-color: var(--primary); width: 110%; left: -5%; }
+        .search-box i { position: absolute; left: 20px; top: 18px; color: #888; }
 
-        /* Grid Layout */
+        /* Grille de Films */
+        .container { padding: 0 50px; }
+        .section-title { margin: 30px 0 20px; font-size: 1.4rem; font-weight: bold; }
+
         .movie-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 25px;
-            padding: 20px 40px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
         }
 
         .movie-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
             position: relative;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: pointer;
             text-decoration: none;
-            color: inherit;
+            color: white;
         }
 
         .movie-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        .movie-card img {
-            width: 100%;
-            aspect-ratio: 2/3;
-            object-fit: cover;
+        .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+
+        .movie-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 10px 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            opacity: 0;
+            transition: 0.3s;
         }
 
-        .movie-title {
-            padding: 12px;
-            margin: 0;
-            font-size: 1rem;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        .movie-card:hover .movie-info { opacity: 1; }
 
-        /* Badge Dernier Ajout */
+        .movie-title { font-size: 0.9rem; margin: 0; font-weight: bold; }
+
         .badge-new {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 10px; right: 10px;
             background: var(--primary);
-            color: black;
-            padding: 4px 10px;
-            font-size: 0.75rem;
+            font-size: 0.6rem;
+            padding: 3px 8px;
+            border-radius: 3px;
             font-weight: bold;
-            border-radius: 4px;
-            z-index: 5;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            text-transform: uppercase;
         }
 
-        /* Responsive */
-        @media (max-width: 600px) {
-            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); padding: 10px; }
-            .navbar { padding: 10px 15px; }
+        @media (max-width: 768px) {
+            .navbar { padding: 15px 20px; }
+            .container { padding: 0 20px; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="user-info">
-            👤 <b>{{ session['user'] }}</b> 
-            <a href="{{ url_for('logout') }}" style="color: #ff5252; margin-left: 10px; text-decoration: none;">Quitter</a>
+    <nav class="navbar" id="navbar">
+        <a href="#" class="logo">ITH<span>FLIX</span></a>
+        <div class="user-menu">
+            <span class="user-name"><i class="fa-solid fa-circle-user"></i> {{ session['user'] }}</span>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Déconnexion</a>
         </div>
-        <a href="{{ url_for('hub') }}" class="btn-hub">🏠 Accueil Hub</a>
     </nav>
 
-    <div class="search-container">
-        <input type="text" id="movieSearch" class="search-bar" onkeyup="filterMovies()" placeholder="Rechercher un film, une série...">
+    <div class="hero">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="movieSearch" class="search-bar" onkeyup="filterMovies()" placeholder="Rechercher votre film...">
+        </div>
     </div>
 
-    <div class="movie-grid" id="movieGrid">
-        {% for m in movies %}
-        <a href="{{ url_for('watch', movie_id=m['_id']|string) }}" class="movie-card">
-            
-            {% if loop.first %}
-            <div class="badge-new">🟡 Dernier ajout</div>
-            {% endif %}
-
-            <img src="{{ m.cover }}" alt="{{ m.title }}">
-            <h3 class="movie-title">{{ m.title }}</h3>
-        </a>
-        {% endfor %}
+    <div class="container">
+        <h2 class="section-title">Catalogue d'ITHHub</h2>
+        <div class="movie-grid" id="movieGrid">
+            {% for m in movies %}
+            <a href="{{ url_for('watch', movie_id=m['_id']|string) }}" class="movie-card">
+                {% if loop.first %}
+                <div class="badge-new">NOUVEAUTÉ</div>
+                {% endif %}
+                <img src="{{ m.cover }}" alt="{{ m.title }}">
+                <div class="movie-info">
+                    <h3 class="movie-title">{{ m.title }}</h3>
+                    <div style="font-size: 0.7rem; color: #aaa; margin-top: 5px;">
+                        <i class="fa-solid fa-play"></i> Regarder maintenant
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
     </div>
 
     <script>
+        // Effet scroll sur la navbar
+        window.onscroll = function() {
+            var nav = document.getElementById('navbar');
+            if (window.pageYOffset > 50) {
+                nav.style.background = "var(--nav-bg)";
+            } else {
+                nav.style.background = "transparent";
+            }
+        };
+
         function filterMovies() {
             const input = document.getElementById('movieSearch').value.toLowerCase();
-            const grid = document.getElementById('movieGrid');
-            const cards = grid.getElementsByClassName('movie-card');
-
+            const cards = document.getElementsByClassName('movie-card');
             for (let i = 0; i < cards.length; i++) {
-                const title = cards[i].getElementsByClassName('movie-title')[0].innerText.toLowerCase();
-                if (title.includes(input)) {
-                    cards[i].style.display = "";
-                } else {
-                    cards[i].style.display = "none";
-                }
+                const title = cards[i].querySelector('.movie-title').innerText.toLowerCase();
+                cards[i].style.display = title.includes(input) ? "" : "none";
             }
         }
     </script>
-
 </body>
 </html>
